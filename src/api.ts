@@ -45,4 +45,11 @@ export const uploadPdf = (pdfData: FormData) => {
   });
 };
 
+export const deletePdf = (fileName: string) => {
+  return fetchData("delete-pdf", {
+    method: "POST",
+    body: { fileName },
+  });
+};
+
 export const getPdfs = () => fetchData("get-pdfs");

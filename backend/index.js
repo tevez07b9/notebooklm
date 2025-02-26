@@ -177,6 +177,29 @@ app.get("/get-pdfs", async (req, res) => {
   }
 });
 
+// Delete a pdf document
+app.post("/delete-pdf", async (req, res) => {
+  const { fileName } = req.body;
+
+  if (!fileName) {
+    return res.status(400).json({ error: "fileName is required" });
+  }
+
+  try {
+    const db = await dbPromise;
+    // Delete records from pdf_pages
+    await db.run("DELETE FROM pdf_pages WHERE fileName = ?", [fileName]);
+
+    // Delete record from pdf_details
+    await db.run("DELETE FROM pdf_details WHERE fileName = ?", [fileName]);
+
+    res.json({ success: true, message: "PDF deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting PDF:", error);
+    res.status(500).json({ error: "Failed to delete PDF" });
+  }
+});
+
 // File upload endpoint
 app.post("/upload", upload.single("pdf"), async (req, res) => {
   if (!req.file) {

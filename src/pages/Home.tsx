@@ -3,17 +3,38 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 import UploadModal from "@/components/UploadModal";
 import { Badge } from "@/components/ui/badge";
-import { getPdfs } from "@/api";
+import { deletePdf, getPdfs } from "@/api";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Trash } from "lucide-react";
 
 type PDF = {
   title: string;
   fileName: string;
   summary: string;
   keywords: string;
+  onDelete: (fileName: string) => void;
 };
-const PdfCard = ({ title, summary, fileName, keywords }: PDF) => {
+const PdfCard = ({ title, summary, fileName, keywords, onDelete }: PDF) => {
   const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
   const keywordsArr = keywords.split(",").map((k) => k.trim());
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    try {
+      setDeleting(true);
+      await deletePdf(fileName);
+      toast.success("PDF deleted successfully!");
+      onDelete(fileName);
+    } catch (error) {
+      console.error("Failed to delete PDF", error);
+      toast.error("Failed to delete PDF");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <Card
@@ -22,8 +43,17 @@ const PdfCard = ({ title, summary, fileName, keywords }: PDF) => {
           state: { pdfFileName: fileName },
         });
       }}
-      className="w-full shadow-md hover:shadow-lg transition border rounded-2xl cursor-pointer"
+      className="w-full shadow-md hover:shadow-lg transition border rounded-2xl cursor-pointer relative"
     >
+      <Button
+        variant="destructive"
+        size="icon"
+        className="absolute top-3 right-3"
+        onClick={handleDelete}
+        disabled={deleting}
+      >
+        <Trash className="h-4 w-4" />
+      </Button>
       <CardHeader>
         <CardTitle className="text-lg font-semibold">{title}</CardTitle>
       </CardHeader>
@@ -56,6 +86,10 @@ const Home = () => {
     fetchPdfs();
   }, []);
 
+  const handleDelete = (fileName: string) => {
+    setPdfs((prev) => prev.filter((pdf) => pdf.fileName !== fileName));
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-4xl space-y-6">
@@ -73,6 +107,7 @@ const Home = () => {
                 title={pdf.title}
                 summary={pdf.summary}
                 keywords={pdf.keywords}
+                onDelete={handleDelete}
               />
             ))}
           </div>
