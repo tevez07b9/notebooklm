@@ -38,11 +38,23 @@ export const askQuestion = (question: string, fileName: string) => {
   });
 };
 
-export const uploadPdf = (pdfData: FormData) => {
-  return fetchData("upload", {
-    method: "POST",
-    body: pdfData,
-  });
+export const uploadPdf = async (pdfData: FormData) => {
+  const url = `${API_URL}/upload`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: pdfData,
+    });
+    if (!response.ok) {
+      throw new Error(`Server error! Status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Fetch error:", error);
+    throw error;
+  }
 };
 
 export const deletePdf = (fileName: string) => {
